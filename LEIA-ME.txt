@@ -1,0 +1,8 @@
+MINHAS FINANÇAS — PWA
+Arquivos: index.html, manifest.webmanifest e sw.js.
+
+IMPORTANTE: para instalar como PWA no iPhone, os arquivos precisam estar publicados em um endereço HTTPS.
+Abrir o HTML como arquivo local não ativa a instalação PWA nem o Service Worker.
+Depois de publicado: Safari > Compartilhar > Adicionar à Tela de Início.
+
+A versão inclui receitas, gastos, reserva, categorias, histórico, resumo por categoria, limite diário e backup/restauração.

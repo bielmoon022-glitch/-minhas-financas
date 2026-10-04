@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Minhas Finanças</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0d12;color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif}
+main{max-width:620px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom))}
+h1{margin:0;font-size:27px}.muted{color:#98a1b1;font-size:13px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.card{background:#151a23;border:1px solid #292f3a;border-radius:22px;padding:19px;margin:12px 0}.balance{font-size:38px;font-weight:800;margin:5px 0 15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mini{background:#1c222d;border-radius:15px;padding:12px}.mini b{display:block;margin-top:4px}.green{color:#39d889}.red{color:#ff6670}.blue{color:#75a0ff}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.btn{border:0;border-radius:15px;padding:13px 8px;font-weight:750;color:#fff;background:#202632}.btn.primary{background:#3b78ff}.btn.greenbg{background:#35c979;color:#06140d}.section{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 9px}.section h2{font-size:18px;margin:0}
+.item{display:flex;align-items:center;gap:11px;background:#151a23;border:1px solid #292f3a;border-radius:16px;padding:12px;margin:8px 0}.ico{width:40px;height:40px;border-radius:12px;background:#202632;display:grid;place-items:center;font-size:19px}.info{flex:1;min-width:0}.info strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.info small{color:#98a1b1}.amount{font-weight:750}.del{background:none;border:0;color:#70798a;font-size:19px}
+.empty{text-align:center;padding:26px;color:#8f98a8;border:1px dashed #303746;border-radius:16px}
+.modal{display:none;position:fixed;inset:0;background:#000a;z-index:10;align-items:flex-end}.modal.show{display:flex}.sheet{width:100%;max-width:620px;margin:auto 0 0;background:#171c25;border-radius:25px 25px 0 0;padding:20px 16px calc(22px + env(safe-area-inset-bottom));border-top:1px solid #303746}.sheet h2{margin:0 0 14px}.field{margin:10px 0}.field label{display:block;color:#9aa3b2;font-size:12px;margin-bottom:5px}.field input,.field select{width:100%;padding:13px;border-radius:13px;background:#0e1117;border:1px solid #303746;color:#fff;outline:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.modalBtns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+.notice{background:#17243a;border:1px solid #294b80;padding:12px;border-radius:15px;font-size:13px;line-height:1.4}.reserve{background:#18261e;border-color:#2d6945}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><div><h1>Minhas Finanças</h1><div class="muted" id="month"></div></div><button class="btn" onclick="backup()">⚙️ Backup</button></div>
+<div class="card">
+<div class="muted">Saldo para gastar</div><div class="balance" id="spendable">R$ 0,00</div>
+<div class="grid">
+<div class="mini"><span class="muted">Recebido</span><b class="green" id="income">R$ 0,00</b></div>
+<div class="mini"><span class="muted">Gastos</span><b class="red" id="expenses">R$ 0,00</b></div>
+<div class="mini"><span class="muted">Reserva</span><b class="blue" id="reserve">R$ 0,00</b></div>
+<div class="mini"><span class="muted">Total que tenho</span><b id="total">R$ 0,00</b></div>
+</div></div>
+
+<div class="card">
+<div class="muted">Para o dinheiro durar até o fim do mês</div>
+<div style="font-size:27px;font-weight:800;margin:5px 0" id="daily">R$ 0,00/dia</div>
+<div class="muted" id="days"></div>
+</div>
+
+<div class="actions">
+<button class="btn greenbg" onclick="openForm('income')">＋ Recebi</button>
+<button class="btn primary" onclick="openForm('expense')">− Gastei</button>
+<button class="btn" onclick="openForm('reserve')">🏦 Guardei</button>
+</div>
+
+<div class="section"><h2>Histórico</h2><span class="muted" id="count"></span></div>
+<div id="list"></div>
+
+<div class="section"><h2>Resumo por categoria</h2></div>
+<div id="cats"></div>
+
+<div class="section"><h2>Dados</h2></div>
+<div class="grid"><button class="btn" onclick="exportData()">⬇️ Exportar backup</button><button class="btn" onclick="document.getElementById('file').click()">⬆️ Restaurar backup</button></div>
+<input id="file" type="file" accept=".json" hidden onchange="importData(event)">
+</main>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">
+<h2 id="title">Adicionar gasto</h2>
+<div class="field"><label>Descrição</label><input id="desc" placeholder="Ex.: Mercado da semana"></div>
+<div class="row">
+<div class="field"><label>Valor</label><input id="value" inputmode="decimal" placeholder="0,00"></div>
+<div class="field"><label>Categoria</label><select id="cat">
+<option>Alimentação / mantimentos</option><option>Aluguel</option><option>Água</option><option>Luz</option><option>Internet</option><option>Faculdade / educação</option><option>Gasolina</option><option>Transporte</option><option>Carro</option><option>Saúde</option><option>Lazer</option><option>Compras</option><option>Outros</option>
+</select></div></div>
+<div class="modalBtns"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveEntry()">Salvar</button></div>
+</div></div>
+
+<script>
+const KEY='minhas_financas_v2';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"entries":[]}'), mode='expense';
+const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+function persist(){localStorage.setItem(KEY,JSON.stringify(db))}
+function openForm(m){mode=m;document.getElementById('title').textContent=m==='income'?'Adicionar valor recebido':m==='reserve'?'Guardar dinheiro':'Adicionar gasto';document.getElementById('desc').value='';document.getElementById('value').value='';document.getElementById('modal').classList.add('show');setTimeout(()=>document.getElementById('desc').focus(),80)}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function saveEntry(){let desc=document.getElementById('desc').value.trim(), v=Number(document.getElementById('value').value.replace(/\./g,'').replace(',','.'));if(!desc||!v||v<0){alert('Preencha descrição e valor.');return}db.entries.push({id:Date.now(),type:mode,desc,value:v,cat:document.getElementById('cat').value,date:new Date().toISOString()});persist();render();closeModal()}
+function remove(i){if(confirm('Excluir este lançamento?')){db.entries.splice(i,1);persist();render()}}
+function render(){
+let inc=db.entries.filter(x=>x.type==='income').reduce((a,x)=>a+x.value,0), exp=db.entries.filter(x=>x.type==='expense').reduce((a,x)=>a+x.value,0), res=db.entries.filter(x=>x.type==='reserve').reduce((a,x)=>a+x.value,0), spend=inc-exp-res;
+document.getElementById('income').textContent=money(inc);document.getElementById('expenses').textContent=money(exp);document.getElementById('reserve').textContent=money(res);document.getElementById('total').textContent=money(inc-exp);document.getElementById('spendable').textContent=money(spend);
+let now=new Date(), end=new Date(now.getFullYear(),now.getMonth()+1,0), days=Math.max(1,Math.ceil((end-now)/86400000)+1);document.getElementById('daily').textContent=money(Math.max(0,spend)/days)+'/dia';document.getElementById('days').textContent=`Restam aproximadamente ${days} dias neste mês. Se gastar até esse limite por dia, a conta fecha.`;
+document.getElementById('month').textContent=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(now).replace(/^./,c=>c.toUpperCase());document.getElementById('count').textContent=db.entries.length+' lançamentos';
+let list=document.getElementById('list');if(!db.entries.length){list.innerHTML='<div class="empty">Ainda não há lançamentos.<br>Comece registrando o que recebeu.</div>'}else{list.innerHTML=db.entries.slice().reverse().map((x,j)=>{let i=db.entries.length-1-j, sign=x.type==='income'?'+':x.type==='reserve'?'↗':'-', color=x.type==='income'?'green':x.type==='reserve'?'blue':'red', icon=x.type==='income'?'💰':x.type==='reserve'?'🏦':'💸';return `<div class="item"><div class="ico">${icon}</div><div class="info"><strong>${esc(x.desc)}</strong><small>${esc(x.cat)} · ${new Date(x.date).toLocaleDateString('pt-BR')}</small></div><div class="amount ${color}">${sign} ${money(x.value)}</div><button class="del" onclick="remove(${i})">×</button></div>`}).join('')}
+let map={};db.entries.filter(x=>x.type==='expense').forEach(x=>map[x.cat]=(map[x.cat]||0)+x.value);let arr=Object.entries(map).sort((a,b)=>b[1]-a[1]);document.getElementById('cats').innerHTML=arr.length?arr.map(([k,v])=>`<div class="item"><div class="info"><strong>${esc(k)}</strong></div><div class="amount red">${money(v)}</div></div>`).join(''):'<div class="empty">As categorias aparecerão aqui conforme você gastar.</div>';
+}
+function exportData(){let b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='backup-minhas-financas.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.entries))throw 0;db=x;persist();render();alert('Backup restaurado!')}catch{alert('Backup inválido.')}};r.readAsText(f);e.target.value=''}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();
+</script>
+</body></html>
